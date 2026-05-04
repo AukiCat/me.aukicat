@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auki_cat</title>
+<link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+<link rel="apple-touch-icon" href="assets/auki.png">
+
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="0">
+
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black:  #000000;
+    --white:  #f0f0f0;
+    --grey:   #555;
+    --accent: #c8c8c8;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Share Tech Mono', monospace;
+    overflow-x: hidden;
+    cursor: url('assets/cursor.svg'), auto;
+  }
+
+  a, button, .lang-btn, .link-btn, .pgp-link {
+    cursor: url('assets/cursor.svg'), pointer !important;
+  }
+
+  #intro {
+    position: fixed; inset: 0;
+    background: var(--black);
+    z-index: 100; pointer-events: none;
+  }
+
+  .bar {
+    position: fixed; top: 0; bottom: 0; width: 50%;
+    background: var(--black); z-index: 101;
+    transition: transform 0.75s cubic-bezier(0.77,0,0.18,1);
+  }
+  .bar-left  { left: 0; }
+  .bar-right { right: 0; }
+  .bar-left::after, .bar-right::after {
+    content: ''; position: absolute;
+    top: 0; bottom: 0; width: 1px;
+    background: rgba(255,255,255,0.06);
+  }
+  .bar-left::after  { right: 0; }
+  .bar-right::after { left: 0; }
+
+  #logo-wrap {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 102;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    opacity: 1;
+    transition: opacity 1s ease;
+  }
+  #logo-wrap.fade-out { opacity: 0; pointer-events: none; }
+
+  #logo-wrap img {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    filter: drop-shadow(0 0 30px rgba(255,255,255,0.18));
+  }
+  #logo-label {
+    font-family: 'Rajdhani', sans-serif; font-weight: 300;
+    font-size: 13px; letter-spacing: 8px;
+    color: rgba(255,255,255,0.5); text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  #intro.open .bar-left  { transform: translateX(-100%); }
+  #intro.open .bar-right { transform: translateX(100%); }
+
+  #intro.done {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  #lang-switch {
+    position: fixed; top: 14px; right: 18px; z-index: 60;
+    display: flex; opacity: 0; transition: opacity 0.5s ease;
+  }
+  #lang-switch.show { opacity: 1; }
+
+  .lang-btn {
+    background: rgba(0,0,0,0);
+    border: 1px solid rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.22);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; letter-spacing: 2.5px;
+    padding: 5px 10px; cursor: pointer;
+    text-transform: uppercase;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .lang-btn:first-child { border-right: none; }
+  .lang-btn:hover { color: rgba(255,255,255,0.45); border-color: rgba(255,255,255,0.14); }
+  .lang-btn.active {
+    color: rgba(255,255,255,0.72);
+    border-color: rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.035);
+  }
+  .lang-btn.active::before {
+    content: ''; position: absolute;
+    top: 4px; right: 4px;
+    width: 3px; height: 3px;
+    background: rgba(255,255,255,0.3);
+  }
+
+  #page {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 92px 20px 64px;
+    opacity: 0; transition: opacity 0.5s ease;
+    z-index: 10;
+  }
+  #page.visible { opacity: 1; }
+
+  .rule {
+    width: 1px; height: 36px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent);
+    margin: 10px auto 0;
+  }
+
+  #nick {
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: clamp(2.8rem, 10vw, 4.8rem);
+    letter-spacing: 0.13em; color: var(--white); text-transform: uppercase;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    margin-top: 52px; position: relative;
+    pointer-events: auto;
+    z-index: 10;
+  }
+  #nick::after {
+    content: ''; position: absolute;
+    bottom: -6px; left: 0; right: 0;
+    height: 1px; background: rgba(255,255,255,0.06);
+  }
+  #nick.show { opacity: 1; transform: translateY(0); }
+
+  #nick .glitch-text {
+    position: relative;
+    display: inline-block;
+    pointer-events: none;
+  }
+  #nick .glitch-text::before,
+  #nick .glitch-text::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    color: var(--white);
+    opacity: 0;
+    pointer-events: none;
+  }
+  #nick .glitch-text::before {
+    color: #ff003c;
+    mix-blend-mode: screen;
+  }
+  #nick .glitch-text::after {
+    color: #00e5ff;
+    mix-blend-mode: screen;
+  }
+
+  #nick .glitch-text.glitching::before {
+    animation: glitch-before 0.2s steps(2) forwards;
+  }
+  #nick .glitch-text.glitching::after {
+    animation: glitch-after 0.2s steps(2) forwards;
+  }
+
+  @keyframes glitch-before {
+    0%   { opacity: 0; clip-path: inset(0 0 100% 0); transform: translateX(0); }
+    15%  { opacity: 0.85; clip-path: inset(10% 0 60% 0); transform: translateX(-4px) skewX(-2deg); }
+    35%  { opacity: 0.7;  clip-path: inset(55% 0 20% 0); transform: translateX(3px); }
+    55%  { opacity: 0.6;  clip-path: inset(30% 0 50% 0); transform: translateX(-2px) skewX(1deg); }
+    75%  { opacity: 0.4;  clip-path: inset(70% 0 10% 0); transform: translateX(5px); }
+    90%  { opacity: 0.2;  clip-path: inset(20% 0 70% 0); transform: translateX(-1px); }
+    100% { opacity: 0;    clip-path: inset(0 0 100% 0); transform: translateX(0); }
+  }
+
+  @keyframes glitch-after {
+    0%   { opacity: 0; clip-path: inset(100% 0 0 0); transform: translateX(0); }
+    15%  { opacity: 0.7;  clip-path: inset(60% 0 10% 0); transform: translateX(5px) skewX(3deg); }
+    35%  { opacity: 0.8;  clip-path: inset(20% 0 55% 0); transform: translateX(-4px); }
+    55%  { opacity: 0.5;  clip-path: inset(45% 0 30% 0); transform: translateX(2px) skewX(-1deg); }
+    75%  { opacity: 0.3;  clip-path: inset(80% 0 5% 0);  transform: translateX(-3px); }
+    90%  { opacity: 0.15; clip-path: inset(10% 0 80% 0); transform: translateX(1px); }
+    100% { opacity: 0;    clip-path: inset(100% 0 0 0);  transform: translateX(0); }
+  }
+
+  #tagline {
+    font-size: 13px; letter-spacing: 4px;
+    color: rgba(255,255,255,0.6); margin-top: 16px;
+    opacity: 0; transition: opacity 0.6s ease 0.2s;
+    text-align: center;
+    pointer-events: none;
+  }
+  #tagline.show { opacity: 1; }
+  #tagline.glitching-tagline {
+    animation: glitch-before 0.2s steps(2) infinite;
+    color: #ff003c;
+  }
+
+  #links {
+    margin-top: 48px; display: flex; flex-direction: column;
+    gap: 9px; width: 100%; max-width: 340px;
+  }
+  .link-btn {
+    display: flex; align-items: center; justify-content: center;
+    padding: 12px 18px;
+    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(0,0,0,0);
+    color: var(--accent); text-decoration: none;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11.5px; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color 0.22s, background 0.22s, color 0.22s;
+    position: relative; overflow: hidden;
+    opacity: 0; transform: translateY(14px);
+  }
+  .link-btn * { pointer-events: none; }
+  .link-btn::before, .link-btn::after {
+    content: ''; position: absolute;
+    top: 0; bottom: 0; width: 2px;
+    background: rgba(255,255,255,0.13);
+    transform: scaleY(0); transform-origin: bottom;
+    transition: transform 0.22s ease;
+  }
+  .link-btn::before { left: 0; }
+  .link-btn::after { right: 0; }
+  .link-btn:hover {
+    border-color: rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.04);
+    color: #fff;
+  }
+  .link-btn:hover::before, .link-btn:hover::after { transform: scaleY(1); }
+  .link-btn .label { text-align: center; }
+  .link-btn.show {
+    opacity: 1; transform: translateY(0);
+    transition: opacity 0.45s ease, transform 0.45s ease,
+                border-color 0.22s, background 0.22s, color 0.22s;
+  }
+
+  .divider {
+    width: 100%; height: 1px;
+    background: rgba(255,255,255,0.035);
+    margin: 4px 0; opacity: 0; transition: opacity 0.4s ease;
+  }
+  .divider.show { opacity: 1; }
+
+  #pgp {
+    margin-top: 40px; max-width: 340px; width: 100%;
+    opacity: 0; transition: opacity 0.6s ease;
+    text-align: center;
+  }
+  #pgp.show { opacity: 1; }
+
+  .pgp-link {
+    display: inline-block;
+    color: var(--white);
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 12px;
+    border: 1px solid rgba(255,255,255,0.07);
+    transition: all 0.2s ease;
+    width: 100%;
+  }
+  .pgp-link:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  #footer {
+    margin: 54px auto 0; 
+    font-size: 8px; letter-spacing: 3px;
+    color: #444; text-transform: uppercase;
+    opacity: 0; 
+    transition: opacity 0.5s ease, color 3s ease, text-shadow 3s ease;
+    text-align: center; 
+    width: fit-content;
+    padding: 10px 24px;
+    user-select: none;
+  }
+  #footer.show { opacity: 1; }
+  #footer:hover {
+    color: rgba(255,255,255,0.85);
+    text-shadow: 0 0 15px rgba(255,255,255,0.6), 0 0 30px rgba(255,255,255,0.2);
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+  }
+
+  body::after {
+    content: ''; position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent, transparent 2px,
+      rgba(0,0,0,0.028) 2px, rgba(0,0,0,0.028) 4px
+    );
+    pointer-events: none; z-index: 200;
+  }
+
+  @media (min-width: 768px) {
+    #logo-wrap img { width: 280px; height: 280px; }
+    #logo-label { font-size: 24px; letter-spacing: 12px; margin-top: 16px; }
+
+    #nick { font-size: 6rem; margin-top: 64px; }
+    #tagline { font-size: 18px; letter-spacing: 6px; color: rgba(255,255,255,0.7); }
+
+    #links { max-width: 480px; gap: 14px; }
+    .link-btn { padding: 18px 24px; font-size: 16px; }
+    .link-btn .icon { width: 20px; height: 20px; }
+
+    #pgp { max-width: 480px; margin-top: 72px; }
+    #pgp-toggle { font-size: 14px; }
+    #pgp-fp { font-size: 14px; margin-top: 16px; }
+    #pgp-key pre { font-size: 11px; }
+    .copy-hint { font-size: 13px; margin-top: 12px; }
+
+    #footer { font-size: 11px; margin-top: 84px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="intro">
+  <div class="bar bar-left"></div>
+  <div class="bar bar-right"></div>
+</div>
+
+<div id="logo-wrap">
+  <img src="assets/auki.png" alt="Logo">
+  <div id="logo-label">Auki_cat</div>
+</div>
+
+<div id="lang-switch">
+  <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  <button class="lang-btn" id="btn-ru" onclick="setLang('ru')">RU</button>
+</div>
+
+<div id="page">
+
+  <div id="nick">
+    <span class="glitch-text" data-text="Auki_cat">Auki_cat</span>
+  </div>
+  <div id="tagline"></div>
+
+  <div class="rule"></div>
+
+  <div id="links">
+
+    <a class="link-btn" href="https://smp19.simplex.im/a#CA6SOodv1MYmKG0nWHaRlOl7bNyf3j790s8d3wEIVDU" target="_blank" rel="noopener">
+      <span class="label" id="label-simplex"></span>
+    </a>
+
+    <a class="link-btn" href="https://t.me/auki_cat" target="_blank" rel="noopener">
+      <span class="label" id="label-telegram"></span>
+    </a>
+
+    <div class="divider"></div>
+
+    <a class="link-btn" href="https://discordapp.com/users/443083516679553034/" target="_blank" rel="noopener">
+      <span class="label" id="label-discord"></span>
+    </a>
+
+    <a class="link-btn" href="https://steamcommunity.com/id/Auki_cat/" target="_blank" rel="noopener">
+      <span class="label" id="label-steam"></span>
+    </a>
+
+    <div class="divider"></div>
+
+    <a class="link-btn" href="https://github.com/AukiCat" target="_blank" rel="noopener">
+      <span class="label" id="label-github"></span>
+    </a>
+
+  </div>
+
+  <div id="pgp">
+    <a href="https://raw.githubusercontent.com/AukiCat/PGP-Keys/refs/heads/main/Auki_cat_public.asc" target="_blank" rel="noopener" class="pgp-link" id="pgp-link"></a>
+  </div>
+
+  <div id="footer"></div>
+
+</div>
+
+<script>
+const i18n = {
+  en: {
+    tagline:  '// faith · hope · angel',
+    secret:   'Aukigahara Katsuo',
+    simplex:  'SimpleX Chat',
+    telegram: 'Telegram',
+    discord:  'Discord',
+    steam:    'Steam',
+    github:   'GitHub',
+    pgpLink:  '[ PGP Public Key ]',
+    footer:   '// auki_cat · stay human',
+  },
+  ru: {
+    tagline:  '// вера · надежда · ангел',
+    secret:   'Аукигахара Кэтсуо',
+    simplex:  'SimpleX Chat',
+    telegram: 'Telegram',
+    discord:  'Discord',
+    steam:    'Steam',
+    github:   'GitHub',
+    pgpLink:  '[ PGP Публичный ключ ]',
+    footer:   '// auki_cat · оставайся человеком',
+  }
+};
+
+const browserLang = (navigator.language || 'en').toLowerCase().startsWith('ru') ? 'ru' : 'en';
+let lang = browserLang;
+
+function setLang(l) {
+  lang = l;
+  const t = i18n[l];
+  const taglineEl = document.getElementById('tagline');
+  // If secret is active, don't overwrite with original tagline immediately
+  if (!taglineEl.classList.contains('is-secret')) {
+    taglineEl.textContent = t.tagline;
+  }
+  document.getElementById('label-simplex').textContent  = t.simplex;
+  document.getElementById('label-telegram').textContent = t.telegram;
+  document.getElementById('label-discord').textContent  = t.discord;
+  document.getElementById('label-steam').textContent    = t.steam;
+  document.getElementById('label-github').textContent   = t.github;
+  document.getElementById('pgp-link').textContent       = t.pgpLink;
+  document.getElementById('footer').textContent         = t.footer;
+  document.getElementById('btn-en').classList.toggle('active', l === 'en');
+  document.getElementById('btn-ru').classList.toggle('active', l === 'ru');
+}
+
+const intro    = document.getElementById('intro');
+const logoWrap = document.getElementById('logo-wrap');
+const page     = document.getElementById('page');
+const langSw   = document.getElementById('lang-switch');
+const nickEl   = document.getElementById('nick');
+const taglineEl = document.getElementById('tagline');
+
+const delay = ms => new Promise(r => setTimeout(r, ms));
+
+let secretTimer;
+let isSecretActive = false;
+
+nickEl.addEventListener('mouseenter', () => {
+  secretTimer = setTimeout(async () => {
+    isSecretActive = true;
+    taglineEl.style.transition = 'opacity 0.5s ease';
+    taglineEl.style.opacity = '0';
+    await delay(500);
+    taglineEl.textContent = i18n[lang].secret;
+    taglineEl.classList.add('is-secret');
+    taglineEl.style.opacity = '1';
+  }, 5000);
+});
+
+nickEl.addEventListener('mouseleave', async () => {
+  clearTimeout(secretTimer);
+  if (isSecretActive) {
+    isSecretActive = false;
+    
+    taglineEl.classList.add('glitching-tagline');
+    await delay(300);
+    
+    taglineEl.style.opacity = '0';
+    await delay(300);
+    taglineEl.classList.remove('is-secret', 'glitching-tagline');
+    taglineEl.textContent = i18n[lang].tagline;
+    taglineEl.style.opacity = '1';
+  }
+});
+
+async function runIntro() {
+  await delay(520);
+
+  intro.classList.add('open');
+  await delay(850);
+
+  logoWrap.classList.add('fade-out');
+  await delay(1050);
+
+  intro.classList.add('done');
+  page.classList.add('visible');
+  langSw.classList.add('show');
+  await delay(300);
+
+  document.getElementById('nick').classList.add('show');
+  document.getElementById('tagline').classList.add('show');
+  await delay(310);
+
+  for (const el of document.getElementById('links').children) {
+    await delay(78);
+    el.classList.add('show');
+  }
+  await delay(200);
+
+  document.getElementById('pgp').classList.add('show');
+  await delay(170);
+  document.getElementById('footer').classList.add('show');
+
+  scheduleGlitch();
+}
+
+function scheduleGlitch() {
+  const next = 5000 + Math.random() * 3000;
+  setTimeout(() => {
+    fireGlitch();
+    scheduleGlitch();
+  }, next);
+}
+
+function fireGlitch() {
+  const gt = document.querySelector('.glitch-text');
+  if (!gt) return;
+  gt.classList.remove('glitching');
+  void gt.offsetWidth;
+  gt.classList.add('glitching');
+  setTimeout(() => gt.classList.remove('glitching'), 250);
+}
+
+setLang(browserLang);
+runIntro();
+</script>
+</body>
+</html>
